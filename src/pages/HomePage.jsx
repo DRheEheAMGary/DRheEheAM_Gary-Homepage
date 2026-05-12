@@ -1,23 +1,13 @@
 import profile from '../data/profile';
-import LyricsTypewriter from '../components/LyricsTypewriter';
-import { FaHeart, FaUserGraduate, FaLaptopCode } from 'react-icons/fa';
+import { FaHeart, FaUserGraduate, FaLaptopCode, FaGamepad, FaCube } from 'react-icons/fa';
 
 export default function HomePage() {
   return (
     <div className="page home-page">
-      <div className="profile-header">
-        <div className="avatar-wrapper">
-          <img src={profile.avatar} alt={profile.name} className="avatar" />
-          <div className="avatar-ring" />
-        </div>
-        <h1 className="profile-name">Hello! I'm {profile.name}</h1>
-        <p className="profile-title">{profile.description}</p>
-        <p className="profile-mbti">CN: {profile.cn} | MBTI: {profile.mbti}</p>
-        <p className="profile-quote">"{profile.quote}"</p>
-      </div>
-      <div className="lyrics-section">
-        <LyricsTypewriter />
-      </div>
+      {/* 个人简介 */}
+      <p className="profile-title">{profile.description}</p>
+      <p className="profile-mbti">CN: {profile.cn} | MBTI: {profile.mbti}</p>
+      <p className="profile-quote">"{profile.quote}"</p>
       <div className="quick-stats">
         <div className="stat-item">
           <FaUserGraduate />
@@ -31,6 +21,42 @@ export default function HomePage() {
           <FaHeart />
           <span>{profile.description.split('|')[2].trim()}</span>
         </div>
+      </div>
+
+      {/* 关于我 */}
+      <div className="about-content">
+        {profile.about.map((p, i) => (
+          <p key={i}>{p}</p>
+        ))}
+      </div>
+
+      <div className="about-section">
+        <h3><FaGamepad /> 目前玩的游戏</h3>
+        <ul className="tag-list">
+          {profile.games.map((g, i) => (
+            <li key={i} className="tag">{g}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="about-section">
+        <h3><FaHeart /> 二次元成分</h3>
+        <ul className="tag-list">
+          {profile.anime.map((a, i) => (
+            <li key={i} className="tag">{a}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="about-section">
+        <h3><FaCube /> Minecraft成分</h3>
+        <p>{profile.minecraft}</p>
+      </div>
+
+      <div className="about-section">
+        <h3><FaHeart />主推（推し）</h3>
+        <p>v圈单推 <strong>{profile.vtuber}</strong></p>
+        <p>{profile.genshin}</p>
       </div>
     </div>
   );

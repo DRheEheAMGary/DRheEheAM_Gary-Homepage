@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ThemeProvider } from './hooks/useTheme';
 import ParticleBackground from './components/ParticleBackground';
 import ThemeToggle from './components/ThemeToggle';
 import TabBar from './components/TabBar';
+import LyricsTypewriter from './components/LyricsTypewriter';
+import AnimatedSection from './components/AnimatedSection';
+import profile from './data/profile';
 import HomePage from './pages/HomePage';
-import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import GamesPage from './pages/GamesPage';
 import AnimePage from './pages/AnimePage';
@@ -13,83 +15,75 @@ import LinksPage from './pages/LinksPage';
 import { FaArrowUp } from 'react-icons/fa';
 import './App.css';
 
-const pageComponents = {
-  home: HomePage,
-  about: AboutPage,
-  contact: ContactPage,
-  games: GamesPage,
-  anime: AnimePage,
-  projects: ProjectsPage,
-  links: LinksPage,
-};
-
-const ITEM_DELAY = 40;
-const ITEM_DURATION = 150;
+const sections = [
+  { id: 'home', Component: HomePage },
+  { id: 'links', Component: LinksPage },
+  { id: 'contact', Component: ContactPage },
+  { id: 'games', Component: GamesPage },
+  { id: 'anime', Component: AnimePage },
+  { id: 'projects', Component: ProjectsPage },
+];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [transition, setTransition] = useState({ phase: 'idle', tab: 'home' });
-  const mainRef = useRef(null);
+  const [isManualScrolling, setIsManualScrolling] = useState(false);
+  const scrollRef = useRef(null);
+  const manualTimerRef = useRef(null);
 
+  // 监听主体滚动容器
   useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
     const onScroll = () => {
-      setShowBackToTop(window.scrollY > 400);
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(h > 0 ? (window.scrollY / h) * 100 : 0);
-    };
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+      setShowBackToTop(container.scrollTop > 400);
+      const h = container.scrollHeight - container.clientHeight;
+      setScrollProgress(h > 0 ? (container.scrollTop / h) * 100 : 0);
 
-  const applyDelays = (container, dir) => {
-    const prop = dir === 'exit' ? '--exit-delay' : '--enter-delay';
-    const page = container?.querySelector('.page');
-    if (!page) return 0;
-    const items = [...page.children];
-    const total = items.length;
-    if (total === 0) return 0;
-    items.forEach((el, i) => {
-      const idx = dir === 'exit' ? total - 1 - i : i;
-      el.style.setProperty(prop, `${idx * ITEM_DELAY}ms`);
-    });
-    return (total - 1) * ITEM_DELAY + ITEM_DURATION;
-  };
-
-  const switchTab = useCallback((newTab) => {
-    if (newTab === activeTab || transition.phase !== 'idle') return;
-    const container = mainRef.current;
-
-    // Phase 1: exit — children sink down bottom-to-top
-    const exitTotal = applyDelays(container, 'exit');
-    setTransition({ phase: 'exit', tab: activeTab });
-
-    setTimeout(() => {
-      // Phase 2: switch tab, then enter — children float up top-to-bottom
-      setActiveTab(newTab);
-      setTransition({ phase: 'enter', tab: newTab });
-      window.scrollTo({ top: 0, behavior: 'instant' });
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const enterTotal = applyDelays(mainRef.current, 'enter');
-          setTimeout(() => {
-            setTransition({ phase: 'idle', tab: newTab });
-            // cleanup
-            const page = mainRef.current?.querySelector('.page');
-            if (page) [...page.children].forEach(el => {
-              el.style.removeProperty('--exit-delay');
-              el.style.removeProperty('--enter-delay');
-            });
-          }, enterTotal + 30);
-        });
+      // 手动滚动时更新 activeTab
+      if (isManualScrolling) return;
+      const centerY = container.scrollTop + container.clientHeight / 2;
+      let closest = sections[0].id;
+      let closestDist = Infinity;
+      sections.forEach(({ id }) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const elCenter = rect.top - containerRect.top + rect.height / 2 + container.scrollTop;
+        const dist = Math.abs(elCenter - centerY);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = id;
+        }
       });
-    }, exitTotal + 30);
-  }, [activeTab, transition.phase]);
+      if (closest !== activeTab) {
+        setActiveTab(closest);
+      }
+    };
 
-  const ActivePage = pageComponents[activeTab];
-  const pageClass = transition.phase === 'exit' ? 'page-exit' : transition.phase === 'enter' ? 'page-enter' : '';
+    container.addEventListener('scroll', onScroll, { passive: true });
+    return () => container.removeEventListener('scroll', onScroll);
+  }, [activeTab, isManualScrolling]);
+
+  // Tab 点击 → 滚动到对应 section
+  const scrollToSection = useCallback((tabId) => {
+    const el = document.getElementById(tabId);
+    if (!el) return;
+
+    setActiveTab(tabId);
+    setIsManualScrolling(true);
+    clearTimeout(manualTimerRef.current);
+
+    el.scrollIntoView({ behavior: 'smooth' });
+
+    // 滚动结束后恢复自动检测
+    manualTimerRef.current = setTimeout(() => {
+      setIsManualScrolling(false);
+    }, 800);
+  }, []);
 
   return (
     <ThemeProvider>
@@ -105,27 +99,48 @@ export default function App() {
             <span className="site-title">DRheEheAM_Gary</span>
             <span className="site-subtitle">个人主页 | OIer & 二次元</span>
           </div>
-          <TabBar activeTab={activeTab} setActiveTab={switchTab} />
+          <TabBar activeTab={activeTab} setActiveTab={scrollToSection} />
           <ThemeToggle />
         </div>
 
-        <div className="app-container">
-          <main ref={mainRef} className={`main-content ${pageClass}`}>
-            <ActivePage />
-          </main>
-        </div>
+        <div className="app-body">
+          {/* 主滚动容器：所有页面连续排列，snap 吸附 */}
+          <div className="snap-container" ref={scrollRef}>
+            {sections.map(({ id, Component }) => (
+              <AnimatedSection key={id} id={id}>
+                <Component />
+              </AnimatedSection>
+            ))}
+            <footer className="app-footer">
+              <p>© {new Date().getFullYear()} DRheEheAM_Gary</p>
+              <a href="https://icp.gov.moe/?keyword=20260513" target="_blank" rel="noopener noreferrer">
+                萌ICP备20260513号
+              </a>
+              <p className="footer-quote">"爱如果太猛烈/注定是要毁灭"</p>
+            </footer>
+          </div>
 
-        <footer className="app-footer">
-          <p>© {new Date().getFullYear()} DRheEheAM_Gary</p>
-          <a href="https://icp.gov.moe/?keyword=20260513" target="_blank" rel="noopener noreferrer">
-            萌ICP备20260513号
-          </a>
-          <p className="footer-quote">"爱如果太猛烈/注定是要毁灭"</p>
-        </footer>
+          {/* 全局右侧边栏：头像 + 名字 + 歌词滚动，始终显示 */}
+          <aside className="global-sidebar">
+            <div className="sidebar-top">
+              <h1 className="profile-name">
+                <span className="profile-greeting">Hello! I'm</span>
+                <span className="profile-name-main">{profile.name}</span>
+              </h1>
+              <div className="avatar-wrapper">
+                <img src={profile.avatar} alt={profile.name} className="avatar" />
+                <div className="avatar-ring" />
+              </div>
+            </div>
+            <div className="lyrics-section">
+              <LyricsTypewriter />
+            </div>
+          </aside>
+        </div>
 
         <button
           className={`back-to-top ${showBackToTop ? 'visible' : ''}`}
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
           title="回到顶部"
         >
           <FaArrowUp />

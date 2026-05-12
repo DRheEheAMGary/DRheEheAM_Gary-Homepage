@@ -17,24 +17,29 @@
 |------|------|
 | 🎨 **粒子背景** | 基于 tsParticles 的动态粒子系统，支持鼠标悬停交互 |
 | 🌓 **明暗主题** | 一键切换 Light / Dark 模式 |
-| 🎵 **音乐盒子** | 收藏歌曲列表，内置迷你播放器 |
 | 📝 **打字机歌词** | 逐字显示喜欢的歌词，循环播放 |
 | 📊 **GitHub 贡献图** | 集成 react-github-calendar 展示年度贡献 |
 | 📺 **B站动态** | 调用 Bilibili API 拉取最新动态 |
 | 📱 **响应式设计** | 适配桌面与移动端 |
-| ✨ **页面转场** | 优雅的退场/入场动画过渡效果 |
+| 🖱️ **滚动吸附** | CSS Scroll Snap 无缝切换页面，Tab 自动高亮 |
+| ✨ **元素上浮动画** | IntersectionObserver 驱动，元素依次从下方浮入 |
+| 🔵 **淡蓝点缀** | 图标、头像光环等淡蓝色点缀，清新雅致 |
+| 💳 **卡片悬停** | 圆角卡片 + hover 上浮 + 背景高亮
 
 ## 🗂️ 页面结构
 
 | 页面 | 组件 | 内容 |
 |------|------|------|
-| 🏡 **首页** | `HomePage` | 头像、简介、打字机歌词 |
-| 👤 **关于** | `AboutPage` | 个人介绍、游戏、二次元成分 |
-| 📧 **联系** | `ContactPage` | 联系方式、游戏账号 |
-| 🎮 **游戏** | `GamesPage` | 游戏相关展示 |
-| 🌸 **二次元** | `AnimePage` | 动漫/VTB 相关 |
+| 🏡 **首页** | `HomePage` | 简介、关于我、游戏/二次元成分 |
+| 📧 **联系** | `ContactPage` | 联系方式 |
+| 🎮 **游戏** | `GamesPage` | 游戏账号展示 |
+| 🌸 **二次元** | `AnimePage` | 虚拟主播、角色主推 |
 | 💻 **项目** | `ProjectsPage` | GitHub 项目、贡献图、B站动态 |
 | 🔗 **链接** | `LinksPage` | 个人网站、社交链接合集 |
+
+> 💡 「关于我」已合并至首页，无需单独页面。
+>
+> 💡 右侧全局边栏固定显示头像、名字和歌词打字机。
 
 ## 🚀 快速开始
 
@@ -70,6 +75,7 @@ npm run preview
 src/
 ├── assets/              # 静态资源
 ├── components/          # 通用组件
+│   ├── AnimatedSection.jsx    # 滚动动画容器
 │   ├── BiliBiliFeed.jsx       # B站动态
 │   ├── GitHubContributions.jsx # GitHub贡献图
 │   ├── LyricsTypewriter.jsx   # 歌词打字机
@@ -83,7 +89,6 @@ src/
 │   └── useTheme.jsx     # 主题管理 Hook
 ├── pages/               # 页面组件
 │   ├── HomePage.jsx
-│   ├── AboutPage.jsx
 │   ├── ContactPage.jsx
 │   ├── GamesPage.jsx
 │   ├── AnimePage.jsx
@@ -118,9 +123,3 @@ src/
 <p align="center">
   Made with ❤️ by <a href="https://github.com/DRheEheAMGary">DRheEheAM_Gary</a>
 </p>
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

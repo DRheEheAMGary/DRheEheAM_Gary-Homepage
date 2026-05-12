@@ -32,7 +32,7 @@ const profile = {
 
   minecraft: "生存/冒险/建筑/(微量)生电",
   vtuber: "hanser",
-  genshinPush: "主推 温迪/妮露/茜特菈莉",
+  genshin: "温迪/妮露/茜特菈莉",
 
   // 联系方式
   contacts: [

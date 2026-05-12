@@ -1,6 +1,5 @@
 const tabs = [
   { id: 'home', label: '首页' },
-  { id: 'about', label: '关于我' },
   { id: 'links', label: '链接' },
   { id: 'contact', label: '联系' },
   { id: 'games', label: '游戏' },
