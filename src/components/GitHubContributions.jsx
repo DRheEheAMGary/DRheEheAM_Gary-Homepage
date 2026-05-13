@@ -9,6 +9,10 @@ export default function GitHubContributions() {
         <GitHubCalendar
           username={profile.githubUsername}
           colorScheme="light"
+          theme={{
+            light: ['#ebedf0', '#fef3c7', '#fde68a', '#fbbf24', '#f59e0b'],
+            dark: ['#161b22', '#451a03', '#92400e', '#d97706', '#fbbf24'],
+          }}
           labels={{
             totalCount: '过去一年共 {{count}} 次贡献',
           }}

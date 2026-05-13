@@ -83,6 +83,7 @@ const profile = {
   // GitHub 项目
   githubProjects: [
     { name: "DRheEheAMGary/OI", desc: "信息学代码总结", url: "https://github.com/DRheEheAMGary/OI" },
+    { name: "DRheEheAMGary/DRheEheAM_Gary-Homepage", desc: "个人主页源码", url: "https://github.com/DRheEheAMGary/DRheEheAM_Gary-Homepage"}
   ],
   githubUsername: "DRheEheAMGary",
 
