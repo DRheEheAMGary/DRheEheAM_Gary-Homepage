@@ -329,7 +329,7 @@ img { max-width: 100%; height: auto; }
   display: flex;
   flex-wrap: nowrap;
   gap: 2px;
-  overflow-x: auto;
+  overflow: visible;
   justify-content: center;
   position: relative;
 }
@@ -430,7 +430,7 @@ img { max-width: 100%; height: auto; }
 
 @keyframes elFloatUp {
   0%   { opacity: 0; transform: translateY(32px); }
-  55%  { opacity: 1; transform: translateY(-12px); }
+  55%  { opacity: 1; transform: translateY(-9px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
@@ -680,7 +680,7 @@ a.char-card:hover {
   .top-bar { flex-direction: column; gap: 8px; text-align: center; padding: 12px 0; }
   .top-bar-left { flex-direction: column; gap: 2px; }
   .site-title { font-size: 1.4rem; }
-  .tab-bar { overflow-x: auto; flex-wrap: nowrap; padding: 6px 0; gap: 4px; }
+  .tab-bar { overflow: visible; flex-wrap: nowrap; padding: 6px 0; gap: 4px; }
   .tab-item { padding: 8px 14px; font-size: 0.82rem; }
   .page { padding: 20px 16px; }
   .snap-section { padding: 20px 16px; min-height: auto; }
