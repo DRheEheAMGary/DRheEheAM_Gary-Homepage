@@ -1,5 +1,6 @@
 import { GitHubCalendar } from 'react-github-calendar';
 import profile from '../data/profile';
+import colors from '../styles/colors';
 
 export default function GitHubContributions() {
   return (
@@ -10,11 +11,17 @@ export default function GitHubContributions() {
           username={profile.githubUsername}
           colorScheme="light"
           theme={{
-            light: ['#ebedf0', '#fef3c7', '#fde68a', '#fbbf24', '#f59e0b'],
-            dark: ['#161b22', '#451a03', '#92400e', '#d97706', '#fbbf24'],
+            light: colors.githubCalendarLight,
+            dark: colors.githubCalendarDark,
           }}
           labels={{
             totalCount: '过去一年共 {{count}} 次贡献',
+          }}
+          tooltips={{
+            activity: {
+              text: ({ count, date }) => `${date} 共计 ${count} 次贡献`,
+              placement: 'top',
+            },
           }}
         />
       </div>

@@ -31,11 +31,26 @@ function prepareSection(el) {
   });
 }
 
-export default function AnimatedSection({ id, children }) {
+export default function AnimatedSection({ id, children, manualScrollingFlagRef, targetTabRef, isManualScrolling }) {
   const ref = useRef(null);
   const [entered, setEntered] = useState(false);
   const preparedRef = useRef(false);
   const timerRef = useRef(null);
+
+  // 监听手动滚动状态的变化，当滚动结束时检查是否需要显示已准备的页面
+  useEffect(() => {
+    if (isManualScrolling || !preparedRef.current || !ref.current) return;
+
+    // 手动滚动结束，检查当前页面是否在视口中
+    const rect = ref.current.getBoundingClientRect();
+    const winH = window.innerHeight || document.documentElement.clientHeight;
+    const inView = rect.top < winH * 0.7 && rect.bottom > winH * 0.3;
+
+    if (inView) {
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setEntered(true), 60);
+    }
+  }, [isManualScrolling]);
 
   useEffect(() => {
     const el = ref.current;
@@ -43,6 +58,15 @@ export default function AnimatedSection({ id, children }) {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
+        // 手动滚动期间，非目标页面必须保持隐藏
+        const isManualScrolling = manualScrollingFlagRef.current;
+        const isTarget = id === targetTabRef.current;
+
+        if (isManualScrolling && !isTarget) {
+          setEntered(false);
+          return;
+        }
+
         if (entry.isIntersecting) {
           if (!preparedRef.current) {
             preparedRef.current = true;
@@ -51,9 +75,11 @@ export default function AnimatedSection({ id, children }) {
               requestAnimationFrame(() => setEntered(true));
             });
           } else {
+            // 已准备过的页面：只有在非手动滚动状态下才显示
             clearTimeout(timerRef.current);
-            setEntered(false);
-            timerRef.current = setTimeout(() => setEntered(true), 60);
+            if (!isManualScrolling) {
+              timerRef.current = setTimeout(() => setEntered(true), 60);
+            }
           }
         } else {
           setEntered(false);

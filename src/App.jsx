@@ -31,6 +31,9 @@ export default function App() {
   const [isManualScrolling, setIsManualScrolling] = useState(false);
   const scrollRef = useRef(null);
   const manualTimerRef = useRef(null);
+  // 用 ref 同步传递手动滚动状态，避免 React 批处理异步导致 scrollIntoView 先执行
+  const manualScrollingFlagRef = useRef(false);
+  const targetTabRef = useRef('home');
 
   // 监听主体滚动容器
   useEffect(() => {
@@ -73,6 +76,10 @@ export default function App() {
     const el = document.getElementById(tabId);
     if (!el) return;
 
+    // 同步更新 ref（observer 回调直接读取 .current，不依赖 React 渲染）
+    manualScrollingFlagRef.current = true;
+    targetTabRef.current = tabId;
+
     setActiveTab(tabId);
     setIsManualScrolling(true);
     clearTimeout(manualTimerRef.current);
@@ -81,6 +88,7 @@ export default function App() {
 
     // 滚动结束后恢复自动检测
     manualTimerRef.current = setTimeout(() => {
+      manualScrollingFlagRef.current = false;
       setIsManualScrolling(false);
     }, 800);
   }, []);
@@ -107,7 +115,7 @@ export default function App() {
           {/* 主滚动容器：所有页面连续排列，snap 吸附 */}
           <div className="snap-container" ref={scrollRef}>
             {sections.map(({ id, Component }) => (
-              <AnimatedSection key={id} id={id}>
+              <AnimatedSection key={id} id={id} manualScrollingFlagRef={manualScrollingFlagRef} targetTabRef={targetTabRef} isManualScrolling={isManualScrolling}>
                 <Component />
               </AnimatedSection>
             ))}

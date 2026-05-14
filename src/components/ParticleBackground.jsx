@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import Particles from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
+import colors from "../styles/colors";
 
 export default function ParticleBackground() {
   const particlesInit = useCallback(async (engine) => {
@@ -18,7 +19,7 @@ export default function ParticleBackground() {
         particles: {
           number: { value: 50, density: { enable: true } },
           color: {
-            value: ["#fbbf24", "#f59e0b", "#fcd34d", "#7dd3fc", "#fde68a"],
+            value: colors.particleColors,
           },
           shape: { type: "circle" },
           opacity: { value: 0.5, random: true },
@@ -34,7 +35,7 @@ export default function ParticleBackground() {
           links: {
             enable: true,
             distance: 150,
-            color: "#fbbf24",
+            color: colors.particleLinkColor,
             opacity: 0.3,
             width: 1,
           },
