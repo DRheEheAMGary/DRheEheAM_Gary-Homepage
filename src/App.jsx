@@ -4,6 +4,7 @@ import ParticleBackground from './components/ParticleBackground';
 import ThemeToggle from './components/ThemeToggle';
 import TabBar from './components/TabBar';
 import LyricsTypewriter from './components/LyricsTypewriter';
+import DailyCheckIn from './components/DailyCheckIn';
 import AnimatedSection from './components/AnimatedSection';
 import profile from './data/profile';
 import HomePage from './pages/HomePage';
@@ -27,7 +28,6 @@ const sections = [
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [isManualScrolling, setIsManualScrolling] = useState(false);
   const scrollRef = useRef(null);
   const manualTimerRef = useRef(null);
@@ -42,8 +42,6 @@ export default function App() {
 
     const onScroll = () => {
       setShowBackToTop(container.scrollTop > 400);
-      const h = container.scrollHeight - container.clientHeight;
-      setScrollProgress(h > 0 ? (container.scrollTop / h) * 100 : 0);
 
       // 手动滚动时更新 activeTab
       if (isManualScrolling) return;
@@ -96,10 +94,6 @@ export default function App() {
   return (
     <ThemeProvider>
       <div className="app">
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${scrollProgress}%` }} />
-        </div>
-
         <ParticleBackground />
 
         <div className="top-bar">
@@ -143,6 +137,7 @@ export default function App() {
             <div className="lyrics-section">
               <LyricsTypewriter />
             </div>
+            <DailyCheckIn />
           </aside>
         </div>
 

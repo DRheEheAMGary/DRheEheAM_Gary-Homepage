@@ -1,6 +1,5 @@
 import profile from '../data/profile';
 import GitHubContributions from '../components/GitHubContributions';
-import BiliBiliFeed from '../components/BiliBiliFeed';
 import { FaGithub, FaExternalLinkAlt } from 'react-icons/fa';
 
 export default function ProjectsPage() {
@@ -23,7 +22,6 @@ export default function ProjectsPage() {
       </div>
 
       <GitHubContributions />
-      <BiliBiliFeed />
     </div>
   );
 }

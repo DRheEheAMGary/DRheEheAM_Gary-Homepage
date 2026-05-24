@@ -19,10 +19,6 @@
   /* --- 强调色：粉 --- */
   --accent-pink: #f9a8d4;
 
-  /* --- 强调色：B站粉 --- */
-  --bilibili-pink: #fb7299;
-  --bilibili-pink-hover: #e8618a;
-
   /* --- 背景 --- */
   --bg: #fffbeb;
   --bg-card: rgba(255, 255, 255, 0.85);
@@ -78,6 +74,14 @@
     radial-gradient(circle at 40% 30%, #f59e0b 0%, transparent 50%),
     radial-gradient(circle at 60% 60%, #7dd3fc 0%, transparent 60%);
 
+  /* --- 卡片悬停光斑 (黄色系，无规则混合，静态) --- */
+  --card-hover-bg:
+    radial-gradient(circle at 25% 45%, #fde68a33 0%, transparent 50%),
+    radial-gradient(circle at 70% 35%, #fbbf2433 0%, transparent 55%),
+    radial-gradient(circle at 45% 70%, #fcd34d33 0%, transparent 45%),
+    radial-gradient(circle at 65% 55%, #fef3c733 0%, transparent 50%),
+    radial-gradient(circle at 35% 65%, #f59e0b33 0%, transparent 55%);
+
   /* --- 光泽扫过效果 --- */
   --shimmer-gradient: linear-gradient(
     120deg,
@@ -101,8 +105,6 @@
   --accent-blue-light: #7dd3fc;
   --accent-blue-lighter: #1e3a5f;
   --accent-pink: #f472b6;
-  --bilibili-pink: #fb7299;
-  --bilibili-pink-hover: #e8618a;
   --bg: #1c1917;
   --bg-card: rgba(41, 37, 36, 0.85);
   --bg-card-hover: rgba(41, 37, 36, 0.95);
@@ -134,6 +136,15 @@
     radial-gradient(circle at 50% 70%, #38bdf8 0%, transparent 50%),
     radial-gradient(circle at 40% 30%, #f59e0b 0%, transparent 50%),
     radial-gradient(circle at 60% 60%, #7dd3fc 0%, transparent 60%);
+
+  /* --- 卡片悬停光斑 (黄色系，无规则混合，静态) --- */
+  --card-hover-bg:
+    radial-gradient(circle at 25% 45%, #fde68a 0%, transparent 50%),
+    radial-gradient(circle at 70% 35%, #fbbf24 0%, transparent 55%),
+    radial-gradient(circle at 45% 70%, #fcd34d 0%, transparent 45%),
+    radial-gradient(circle at 65% 55%, #fef3c7 0%, transparent 50%),
+    radial-gradient(circle at 35% 65%, #f59e0b 0%, transparent 55%);
+
   --shimmer-gradient: linear-gradient(
     120deg,
     transparent 0%,

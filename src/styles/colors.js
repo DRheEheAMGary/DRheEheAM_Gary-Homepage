@@ -20,10 +20,6 @@ const colors = {
   // --- 强调色：粉 ---
   accentPink: '#f9a8d4',
 
-  // --- B站 ---
-  bilibiliPink: '#fb7299',
-  bilibiliPinkHover: '#e8618a',
-
   // --- 背景 / 纯色 ---
   white: '#ffffff',
   darkBg: '#1c1917',
