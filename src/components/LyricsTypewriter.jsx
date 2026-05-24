@@ -1,57 +1,91 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useReducer, useEffect, useCallback } from 'react';
 import profile from '../data/profile';
 
 export default function LyricsTypewriter() {
-  const [displayText, setDisplayText] = useState('');
-  const [phase, setPhase] = useState('typing'); // typing | waiting | deleting
-  const [lyricIndex, setLyricIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-
   const getRandomLyric = useCallback(() => {
     return profile.lyrics[Math.floor(Math.random() * profile.lyrics.length)];
   }, []);
 
-  const [currentLyric, setCurrentLyric] = useState(getRandomLyric);
+  const initialState = {
+    displayText: '',
+    phase: 'typing',
+    charIndex: 0,
+    currentLyric: getRandomLyric(),
+  };
+
+  const reducer = (state, action) => {
+    switch (action.type) {
+      case 'ADD_CHAR':
+        return {
+          ...state,
+          displayText: state.displayText + state.currentLyric[state.charIndex],
+          charIndex: state.charIndex + 1,
+        };
+      case 'MOVE_TO_WAITING':
+        return { ...state, phase: 'waiting' };
+      case 'MOVE_TO_DELETING':
+        return { ...state, phase: 'deleting' };
+      case 'REMOVE_CHAR':
+        return {
+          ...state,
+          displayText: state.displayText.slice(0, -1),
+          charIndex: state.charIndex - 1,
+        };
+      case 'NEW_LYRIC':
+        return {
+          ...state,
+          currentLyric: action.payload,
+          displayText: '',
+          charIndex: 0,
+          phase: 'typing',
+        };
+      default:
+        return state;
+    }
+  };
+
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
     const shortLimit = 20;
-    const isShort = currentLyric.length <= shortLimit;
+    const isShort = state.currentLyric.length <= shortLimit;
     const typeSpeed = isShort ? 60 : 80;
     const deleteSpeed = isShort ? 35 : 45;
     const waitTime = isShort ? 2000 : 3000;
 
     let timer;
 
-    if (phase === 'typing') {
-      if (charIndex < currentLyric.length) {
+    if (state.phase === 'typing') {
+      if (state.charIndex < state.currentLyric.length) {
         timer = setTimeout(() => {
-          setDisplayText(prev => prev + currentLyric[charIndex]);
-          setCharIndex(prev => prev + 1);
+          dispatch({ type: 'ADD_CHAR' });
         }, typeSpeed);
       } else {
-        timer = setTimeout(() => setPhase('waiting'), waitTime);
-      }
-    } else if (phase === 'waiting') {
-      timer = setTimeout(() => setPhase('deleting'), 0);
-    } else if (phase === 'deleting') {
-      if (charIndex > 0) {
         timer = setTimeout(() => {
-          setDisplayText(prev => prev.slice(0, -1));
-          setCharIndex(prev => prev - 1);
+          dispatch({ type: 'MOVE_TO_WAITING' });
+        }, waitTime);
+      }
+    } else if (state.phase === 'waiting') {
+      timer = setTimeout(() => {
+        dispatch({ type: 'MOVE_TO_DELETING' });
+      }, 0);
+    } else if (state.phase === 'deleting') {
+      if (state.charIndex > 0) {
+        timer = setTimeout(() => {
+          dispatch({ type: 'REMOVE_CHAR' });
         }, deleteSpeed);
       } else {
         const next = getRandomLyric();
-        setCurrentLyric(next);
-        setPhase('typing');
+        dispatch({ type: 'NEW_LYRIC', payload: next });
       }
     }
 
     return () => clearTimeout(timer);
-  }, [phase, charIndex, currentLyric, getRandomLyric]);
+  }, [state.phase, state.charIndex, state.currentLyric, getRandomLyric]);
 
   return (
     <div className="lyrics-typewriter">
-      <span className="lyrics-text">{displayText}</span>
+      <span className="lyrics-text">{state.displayText}</span>
       <span className="lyrics-cursor">|</span>
     </div>
   );

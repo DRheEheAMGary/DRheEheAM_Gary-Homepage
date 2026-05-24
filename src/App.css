@@ -97,6 +97,8 @@ img { max-width: 100%; height: auto; }
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  position: relative;
+  z-index: 2;
 }
 
 /* 头像 + 名字 横向排列 */
@@ -169,7 +171,7 @@ img { max-width: 100%; height: auto; }
   padding: 0;
   background: none;
   border-radius: 0;
-  min-height: 0;
+  min-height: 3em;
   width: 100%;
 }
 .global-sidebar .lyrics-typewriter { 
@@ -184,6 +186,15 @@ img { max-width: 100%; height: auto; }
   font-weight: bold; 
 }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* 歌词渐变滑块：蓝黄渐变，宽度跟随文字长度 */
+.lyrics-gradient-bar {
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 4px;
+  background: linear-gradient(90deg, #3b82f6, #facc15);
+  transition: width 0.08s linear;
+}
 
 /* ===== 顶栏(含Tab) ===== */
 .top-bar {
@@ -699,6 +710,343 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
+
+/* ===== 每日打卡组件 ===== */
+.checkin-wrapper {
+  position: relative;
+  width: fit-content;
+  z-index: 10;
+}
+
+/* 悬浮日历弹出层：默认隐藏，通过 .visible 类控制 */
+.checkin-popup {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 0;
+  width: 300px;
+  padding: 16px 18px;
+  background: var(--bg-overlay);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* 小三角箭头指向按钮 */
+.checkin-popup::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 32px;
+  border: 8px solid transparent;
+  border-top-color: var(--bg-overlay);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.06));
+}
+
+/* 显示状态 */
+.checkin-popup.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.checkin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.checkin-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkin-title-icon {
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.checkin-title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text);
+  transition: color 0.3s ease;
+}
+
+.checkin-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.checkin-streak {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f97316;
+  padding: 3px 10px;
+  background: rgba(249, 115, 22, 0.12);
+  border-radius: 12px;
+}
+
+.checkin-streak-icon {
+  color: #f97316;
+  animation: firePulse 1.2s ease-in-out infinite;
+}
+
+@keyframes firePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.checkin-trophy {
+  color: #eab308;
+  font-size: 1rem;
+  animation: trophyBounce 1s ease-in-out infinite;
+}
+
+@keyframes trophyBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* 月份导航 */
+.checkin-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.checkin-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  transition: all 0.2s ease;
+}
+
+.checkin-nav-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--tag-bg);
+}
+
+.checkin-month-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  transition: color 0.3s ease;
+}
+
+.checkin-month-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+/* 星期表头 */
+.checkin-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.checkin-weekday {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 0;
+}
+
+/* 日历网格 */
+.checkin-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.checkin-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: default;
+  position: relative;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.checkin-cell.empty {
+  pointer-events: none;
+}
+
+.checkin-cell.today {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--tag-bg);
+  border: 1.5px solid var(--primary);
+}
+
+.checkin-cell.today:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 12px var(--primary);
+}
+
+.checkin-cell.checked {
+  background: var(--gradient-1);
+  color: var(--color-white);
+  font-weight: 600;
+  border: none;
+}
+
+.checkin-cell.checked.today {
+  border: 2px solid var(--color-white);
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.checkin-dot {
+  font-size: 0.55rem;
+  line-height: 1;
+  margin-top: -2px;
+}
+
+.checkin-day-num {
+  line-height: 1;
+}
+
+/* 打卡按钮 - 圆形 */
+.checkin-btn {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-overlay);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 5px;
+  gap: 2px;
+  transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  font-family: inherit;
+  position: relative;
+}
+
+.checkin-btn svg:first-child {
+  font-size: 1.2rem;
+}
+
+.checkin-btn-label {
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.checkin-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 6px 24px var(--primary);
+}
+
+.checkin-btn.checked {
+  background: var(--gradient-1);
+  color: var(--color-white);
+  border-color: transparent;
+}
+
+.checkin-btn.checked:hover {
+  opacity: 0.9;
+  box-shadow: 0 6px 28px var(--primary);
+}
+
+.checkin-btn.animating {
+  animation: checkinPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 按钮右上角 streak 徽标 */
+.checkin-btn-streak {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: #f97316;
+  padding: 2px 6px;
+  border-radius: 10px;
+  line-height: 1;
+}
+
+/* 按钮 + 运势横向排列 */
+.checkin-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 48px;
+  flex-shrink: 0;
+}
+
+/* 运势文字 */
+.checkin-fortune {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
+}
+
+.checkin-fortune-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.checkin-fortune-luck {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+@keyframes checkinPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  70%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
 
 /* ===== 响应式 ===== */
 @media (max-width: 768px) {

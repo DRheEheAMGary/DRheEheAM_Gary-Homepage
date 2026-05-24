@@ -4,6 +4,7 @@ import ParticleBackground from './components/ParticleBackground';
 import ThemeToggle from './components/ThemeToggle';
 import TabBar from './components/TabBar';
 import LyricsTypewriter from './components/LyricsTypewriter';
+import DailyCheckIn from './components/DailyCheckIn';
 import AnimatedSection from './components/AnimatedSection';
 import profile from './data/profile';
 import HomePage from './pages/HomePage';
@@ -136,6 +137,7 @@ export default function App() {
             <div className="lyrics-section">
               <LyricsTypewriter />
             </div>
+            <DailyCheckIn />
           </aside>
         </div>
 
