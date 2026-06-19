@@ -6,6 +6,7 @@ const PER_ELEM_DELAY = 60;
 const LIST_WRAPPERS = [
   'links-grid', 'contact-cards', 'game-cards', 'character-grid',
   'tag-list', 'feed-list',
+  'auth-container', 'auth-form-side', 'auth-form',
 ];
 
 function prepareSection(el) {
@@ -31,11 +32,31 @@ function prepareSection(el) {
   });
 }
 
-export default function AnimatedSection({ id, children, manualScrollingFlagRef, targetTabRef, isManualScrolling }) {
+export default function AnimatedSection({ id, children, manualScrollingFlagRef, targetTabRef, isManualScrolling, resetKey }) {
   const ref = useRef(null);
   const [entered, setEntered] = useState(false);
   const preparedRef = useRef(false);
   const timerRef = useRef(null);
+
+  // resetKey 变化时重置动画状态，重新触发上浮
+  useEffect(() => {
+    if (resetKey === undefined) return;
+    preparedRef.current = false;
+    setEntered(false);
+    const el = ref.current;
+    if (!el) return;
+    // 清除旧的 animate-el 类
+    el.querySelectorAll('.animate-el').forEach(child => {
+      child.classList.remove('animate-el');
+      child.style.animationDelay = '';
+    });
+    // 延迟一帧重新准备
+    requestAnimationFrame(() => {
+      preparedRef.current = true;
+      prepareSection(el);
+      requestAnimationFrame(() => setEntered(true));
+    });
+  }, [resetKey]);
 
   // 监听手动滚动状态的变化，当滚动结束时检查是否需要显示已准备的页面
   useEffect(() => {

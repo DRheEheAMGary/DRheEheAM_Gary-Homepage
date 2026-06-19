@@ -6,6 +6,8 @@ import {
   FaChevronRight,
   FaTrophy,
 } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
+import * as wpApi from '../api/wordpress';
 
 const STORAGE_KEY = 'daily-checkin-dates';
 const FORTUNE_KEY = 'daily-fortune';
@@ -62,17 +64,18 @@ function calcStreak(checkedSet) {
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 
 export default function DailyCheckIn() {
+  const { user } = useAuth();
   const todayStr = getToday();
   const now = new Date();
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(now.getMonth()); // 0-based
-  const [checkedDates, setCheckedDates] = useState(() => loadCheckedDates());
+  const [checkedDates, setCheckedDates] = useState(() => user ? loadCheckedDates() : []);
   const [animating, setAnimating] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const hideTimerRef = useRef(null);
   const showTimerRef = useRef(null);
   const [fortune, setFortune] = useState(() => {
-    // 从 localStorage 恢复今日运势（仅恢复，不新生成）
+    if (!user) return null;
     try {
       const raw = localStorage.getItem(FORTUNE_KEY);
       if (raw) {
@@ -82,6 +85,27 @@ export default function DailyCheckIn() {
     } catch { /* ignore */ }
     return null;
   });
+  const [synced, setSynced] = useState(false);
+
+  // 登录后从云端拉取打卡数据
+  useEffect(() => {
+    if (!user || synced) return;
+    (async () => {
+      try {
+        const cloudDates = await wpApi.getCheckinDates();
+        if (cloudDates && cloudDates.length > 0) {
+          setCheckedDates(cloudDates);
+          saveCheckedDates(cloudDates);
+        }
+        const cloudFortune = await wpApi.getDailyFortune();
+        if (cloudFortune) {
+          setFortune(cloudFortune);
+          localStorage.setItem(FORTUNE_KEY, JSON.stringify({ date: todayStr, ...cloudFortune }));
+        }
+      } catch { /* ignore */ }
+      setSynced(true);
+    })();
+  }, [user, synced, todayStr]);
 
   const checkedSet = new Set(checkedDates);
   const isTodayChecked = checkedSet.has(todayStr);
@@ -94,20 +118,24 @@ export default function DailyCheckIn() {
   }).length;
 
   const toggleToday = useCallback(() => {
+    if (!user) return;
     if (animating || isTodayChecked) return;
     setAnimating(true);
     setTimeout(() => setAnimating(false), 600);
 
     const newFortune = generateFortune();
     setFortune(newFortune);
-    localStorage.setItem(FORTUNE_KEY, JSON.stringify({ date: todayStr, ...newFortune }));
+
+    // 同步到云端
+    wpApi.addCheckinDate(todayStr).catch(() => {});
+    wpApi.saveDailyFortune(newFortune).catch(() => {});
 
     setCheckedDates((prev) => {
       const next = [...prev, todayStr];
       saveCheckedDates(next);
       return next;
     });
-  }, [todayStr, animating, isTodayChecked]);
+  }, [todayStr, animating, isTodayChecked, user]);
 
   // 跨天自动刷新
   useEffect(() => {
@@ -320,15 +348,15 @@ export default function DailyCheckIn() {
         {/* 圆形打卡按钮 */}
         <button
           ref={btnRef}
-          className={`checkin-btn ${isTodayChecked ? 'checked' : ''} ${animating ? 'animating' : ''}`}
+          className={`checkin-btn ${!user ? 'unauth' : ''} ${isTodayChecked ? 'checked' : ''} ${animating ? 'animating' : ''}`}
           onClick={toggleToday}
-          onMouseEnter={handleBtnMouseEnter}
-          onMouseMove={handleBtnMouseMove}
-          title={isTodayChecked ? '今日已打卡' : '点击打卡'}
+          onMouseEnter={user ? handleBtnMouseEnter : undefined}
+          onMouseMove={user ? handleBtnMouseMove : undefined}
+          title={user ? (isTodayChecked ? '今日已打卡' : '点击打卡') : '未登录'}
         >
           <FaCalendarCheck />
-          <span className="checkin-btn-label">打卡</span>
-          {streak > 0 && (
+          <span className="checkin-btn-label">{user ? '打卡' : '未登录'}</span>
+          {user && streak > 0 && (
             <span className="checkin-btn-streak">
               <FaFire /> {streak}
             </span>
