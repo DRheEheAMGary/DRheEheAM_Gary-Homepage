@@ -198,3 +198,64 @@ function checkin_register($request) {
         'username' => $username,
     ];
 }
+
+// ==================== 跨子域共享登录状态 ====================
+// 从 .dreamgary.cn 共享 Cookie 中读取 JWT，自动登录 WordPress
+
+add_action('init', function () {
+    if (is_user_logged_in()) return;
+    if (empty($_COOKIE['wp_jwt_token'])) return;
+
+    $token = sanitize_text_field(wp_unslash($_COOKIE['wp_jwt_token']));
+    $parts = explode('.', $token);
+    if (count($parts) !== 3) return;
+
+    $payload = json_decode(base64_decode($parts[1]), true);
+    if (empty($payload['data']['user']['id'])) return;
+
+    $user_id = intval($payload['data']['user']['id']);
+    $user = get_user_by('id', $user_id);
+    if (!$user) return;
+
+    wp_set_auth_cookie($user_id, true);
+    wp_set_current_user($user_id);
+});
+
+// ==================== 博客登录 → 同步写入共享 JWT Cookie ====================
+// 用户在博客 (blog.dreamgary.cn) 登录后，写入 .dreamgary.cn 共享 Cookie
+
+add_action('wp_login', function ($user_login, $user) {
+    $secret = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : '';
+    if (empty($secret)) return;
+
+    $issuedAt = time();
+    $expire   = $issuedAt + (DAY_IN_SECONDS * 30);
+
+    $payload = [
+        'iss'  => get_bloginfo('url'),
+        'iat'  => $issuedAt,
+        'exp'  => $expire,
+        'data' => [
+            'user' => [
+                'id' => $user->ID,
+            ],
+        ],
+    ];
+
+    if (class_exists('Firebase\\JWT\\JWT')) {
+        $token = \Firebase\JWT\JWT::encode($payload, $secret, 'HS256');
+    } elseif (function_exists('jwt_encode')) {
+        $token = jwt_encode($payload, $secret);
+    } else {
+        return;
+    }
+
+    setcookie('wp_jwt_token', $token, [
+        'expires'  => $expire,
+        'domain'   => '.dreamgary.cn',
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => false,
+        'samesite' => 'Lax',
+    ]);
+}, 10, 2);

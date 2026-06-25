@@ -4,21 +4,52 @@
  */
 
 const WP_BASE = 'https://blog.dreamgary.cn/wp-json';
+const COOKIE_DOMAIN = '.dreamgary.cn';
 
-// ==================== Token 管理 ====================
+// ==================== Token 管理（localStorage + 跨子域 Cookie） ====================
 
 const TOKEN_KEY = 'wp_jwt_token';
 
+/** 读取 token：优先从共享 Cookie，fallback 到 localStorage */
 export function getToken() {
+  const cookie = getSharedCookie(TOKEN_KEY);
+  if (cookie) {
+    // 同步回 localStorage（新标签页首次加载时）
+    if (localStorage.getItem(TOKEN_KEY) !== cookie) {
+      localStorage.setItem(TOKEN_KEY, cookie);
+    }
+    return cookie;
+  }
   return localStorage.getItem(TOKEN_KEY);
 }
 
+/** 写入 token：同时写入 localStorage 和跨子域 Cookie */
 export function setToken(token) {
   localStorage.setItem(TOKEN_KEY, token);
+  setSharedCookie(TOKEN_KEY, token, 30); // 30天有效
 }
 
+/** 清除 token：同时清除 localStorage 和 Cookie */
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
+  deleteSharedCookie(TOKEN_KEY);
+}
+
+// ==================== 跨子域 Cookie 工具 ====================
+
+function setSharedCookie(name, value, days) {
+  const expires = new Date();
+  expires.setDate(expires.getDate() + days);
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; domain=${COOKIE_DOMAIN}; path=/; Secure; SameSite=Lax`;
+}
+
+function getSharedCookie(name) {
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function deleteSharedCookie(name) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${COOKIE_DOMAIN}; path=/; Secure; SameSite=Lax`;
 }
 
 // ==================== 通用请求 ====================
@@ -62,11 +93,20 @@ export async function login(username, password) {
   });
 
   setToken(data.token);
+
+  // 登录后拉取用户头像
+  let avatar = null;
+  try {
+    const userData = await wpFetch('/wp/v2/users/me');
+    avatar = userData.avatar_urls?.['96'] || null;
+  } catch { /* 忽略 */ }
+
   return {
     token: data.token,
     email: data.user_email,
     nicename: data.user_nicename,
     displayName: data.user_display_name,
+    avatar,
   };
 }
 
@@ -130,6 +170,7 @@ export async function getCurrentUser() {
       id: user.id,
       name: user.name,
       slug: user.slug,
+      avatar: user.avatar_urls?.['96'] || null,
     };
   } catch {
     clearToken();

@@ -137,21 +137,21 @@
     radial-gradient(circle at 40% 30%, #f59e0b 0%, transparent 50%),
     radial-gradient(circle at 60% 60%, #7dd3fc 0%, transparent 60%);
 
-  /* --- 卡片悬停光斑 (黄色系，无规则混合，静态) --- */
+  /* --- 卡片悬停光斑 (黄色系，无规则混合，静态，暗色模式降低透明度) --- */
   --card-hover-bg:
-    radial-gradient(circle at 25% 45%, #fde68a 0%, transparent 50%),
-    radial-gradient(circle at 70% 35%, #fbbf24 0%, transparent 55%),
-    radial-gradient(circle at 45% 70%, #fcd34d 0%, transparent 45%),
-    radial-gradient(circle at 65% 55%, #fef3c7 0%, transparent 50%),
-    radial-gradient(circle at 35% 65%, #f59e0b 0%, transparent 55%);
+    radial-gradient(circle at 25% 45%, #fde68a26 0%, transparent 50%),
+    radial-gradient(circle at 70% 35%, #fbbf2426 0%, transparent 55%),
+    radial-gradient(circle at 45% 70%, #fcd34d26 0%, transparent 45%),
+    radial-gradient(circle at 65% 55%, #fef3c726 0%, transparent 50%),
+    radial-gradient(circle at 35% 65%, #f59e0b26 0%, transparent 55%);
 
   --shimmer-gradient: linear-gradient(
     120deg,
     transparent 0%,
     transparent 30%,
-    rgba(180, 83, 9, 0.12) 40%,
-    rgba(146, 64, 14, 0.35) 50%,
-    rgba(180, 83, 9, 0.12) 60%,
+    rgba(255, 251, 235, 0.25) 45%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 251, 235, 0.25) 55%,
     transparent 70%,
     transparent 100%
   );

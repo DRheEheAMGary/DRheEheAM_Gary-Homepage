@@ -72,8 +72,8 @@ export default function DailyCheckIn() {
   const [checkedDates, setCheckedDates] = useState(() => user ? loadCheckedDates() : []);
   const [animating, setAnimating] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const hideTimerRef = useRef(null);
-  const showTimerRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const popupRef = useRef(null);
   const [fortune, setFortune] = useState(() => {
     if (!user) return null;
     try {
@@ -119,7 +119,14 @@ export default function DailyCheckIn() {
 
   const toggleToday = useCallback(() => {
     if (!user) return;
-    if (animating || isTodayChecked) return;
+    if (animating) return;
+
+    // 已打卡：切换日历弹窗
+    if (isTodayChecked) {
+      setShowPopup((prev) => !prev);
+      return;
+    }
+
     setAnimating(true);
     setTimeout(() => setAnimating(false), 600);
 
@@ -136,6 +143,26 @@ export default function DailyCheckIn() {
       return next;
     });
   }, [todayStr, animating, isTodayChecked, user]);
+
+  // 点击日历弹窗外区域关闭弹窗
+  useEffect(() => {
+    if (!showPopup) return;
+    const handleClickOutside = (e) => {
+      if (
+        wrapperRef.current && !wrapperRef.current.contains(e.target)
+      ) {
+        setShowPopup(false);
+      }
+    };
+    // 延迟绑定，避免本次点击事件触发
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showPopup]);
 
   // 跨天自动刷新
   useEffect(() => {
@@ -214,75 +241,14 @@ export default function DailyCheckIn() {
     return 'var(--text)';
   };
 
-  const handleMouseEnter = () => {
-    clearTimeout(hideTimerRef.current);
-    hideTimerRef.current = null;
-    if (showPopup) return;
-    clearTimeout(showTimerRef.current);
-    showTimerRef.current = setTimeout(() => {
-      setShowPopup(true);
-      showTimerRef.current = null;
-    }, 1200);
-  };
-
-  const handleMouseLeave = () => {
-    clearTimeout(showTimerRef.current);
-    showTimerRef.current = null;
-    clearTimeout(hideTimerRef.current);
-    hideTimerRef.current = setTimeout(() => {
-      setShowPopup(false);
-      hideTimerRef.current = null;
-    }, 200);
-  };
-
-  // 圆形按钮精准 hover 检测
-  const btnRef = useRef(null);
-  const isInCircle = (e) => {
-    const btn = btnRef.current;
-    if (!btn) return false;
-    const rect = btn.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = e.clientX - cx;
-    const dy = e.clientY - cy;
-    return Math.sqrt(dx * dx + dy * dy) <= rect.width / 2;
-  };
-
-  const handleBtnMouseEnter = (e) => {
-    if (isInCircle(e)) handleMouseEnter();
-  };
-
-  const handleBtnMouseMove = (e) => {
-    if (isInCircle(e)) {
-      // 在圆内：取消隐藏，若弹窗未打开则启动显示计时
-      clearTimeout(hideTimerRef.current);
-      if (!showPopup && !showTimerRef.current) {
-        showTimerRef.current = setTimeout(() => setShowPopup(true), 3000);
-      }
-    } else {
-      // 滑到角落：触发离开
-      handleMouseLeave();
-    }
-  };
-
-  // cleanup timer
-  useEffect(() => {
-    const hideTimer = hideTimerRef;
-    const showTimer = showTimerRef;
-    return () => {
-      clearTimeout(hideTimer.current);
-      clearTimeout(showTimer.current);
-    };
-  }, []);
-
   return (
     <div className="checkin-row">
       <div
         className="checkin-wrapper"
-        onMouseLeave={handleMouseLeave}
+        ref={wrapperRef}
       >
-        {/* 悬浮日历弹出层 */}
-        <div className={`checkin-popup ${showPopup ? 'visible' : ''}`}>
+        {/* 日历弹出层 */}
+        <div className={`checkin-popup ${showPopup ? 'visible' : ''}`} ref={popupRef}>
           {/* 头部：标题 + 统计 */}
           <div className="checkin-header">
             <div className="checkin-title-row">
@@ -347,12 +313,9 @@ export default function DailyCheckIn() {
 
         {/* 圆形打卡按钮 */}
         <button
-          ref={btnRef}
           className={`checkin-btn ${!user ? 'unauth' : ''} ${isTodayChecked ? 'checked' : ''} ${animating ? 'animating' : ''}`}
           onClick={toggleToday}
-          onMouseEnter={user ? handleBtnMouseEnter : undefined}
-          onMouseMove={user ? handleBtnMouseMove : undefined}
-          title={user ? (isTodayChecked ? '今日已打卡' : '点击打卡') : '未登录'}
+          title={user ? (isTodayChecked ? '今日已打卡（点击查看日历）' : '点击打卡') : '未登录'}
         >
           <FaCalendarCheck />
           <span className="checkin-btn-label">{user ? '打卡' : '未登录'}</span>

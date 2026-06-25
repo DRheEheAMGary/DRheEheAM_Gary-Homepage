@@ -17,7 +17,11 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (username, password) => {
     const userData = await wpApi.login(username, password);
-    const u = { name: userData.displayName || userData.nicename, slug: userData.nicename };
+    const u = {
+      name: userData.displayName || userData.nicename,
+      slug: userData.nicename,
+      avatar: userData.avatar,
+    };
     setUser(u);
     return u;
   }, []);

@@ -44,10 +44,12 @@ function AppContent() {
   const [isManualScrolling, setIsManualScrolling] = useState(false);
   const [showAuthPage, setShowAuthPage] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [logoutClosing, setLogoutClosing] = useState(false);
   const [authResetKey, setAuthResetKey] = useState(0);
   const scrollRef = useRef(null);
   const manualTimerRef = useRef(null);
   const loginBtnRef = useRef(null);
+  const logoutWrapRef = useRef(null);
   // 用 ref 同步传递手动滚动状态，避免 React 批处理异步导致 scrollIntoView 先执行
   const manualScrollingFlagRef = useRef(false);
   const targetTabRef = useRef('home');
@@ -56,6 +58,23 @@ function AppContent() {
   useEffect(() => {
     if (showAuthPage) setAuthResetKey(k => k + 1);
   }, [showAuthPage]);
+
+  // 带退场动画的关闭
+  const closeLogout = () => {
+    setLogoutClosing(true);
+  };
+
+  // 点击空白处关闭退出确认弹窗
+  useEffect(() => {
+    if (!showLogoutConfirm) return;
+    const onDocClick = (e) => {
+      if (logoutWrapRef.current && !logoutWrapRef.current.contains(e.target)) {
+        closeLogout();
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [showLogoutConfirm]);
 
   // 监听主体滚动容器
   useEffect(() => {
@@ -148,9 +167,14 @@ function AppContent() {
           <TabBar activeTab={activeTab} setActiveTab={scrollToSection} isAuthOpen={showAuthPage} loginBtnRef={loginBtnRef} />
           <div className="top-bar-right">
             {user ? (
-              <div className="top-bar-user-wrap">
+              <div className="top-bar-user-wrap" ref={logoutWrapRef}>
                 <div className="top-bar-login-btn top-bar-user-pill">
-                  <FaUserCircle /> {user.name}
+                  {user.avatar ? (
+                    <img src={user.avatar} alt="" className="top-bar-avatar" />
+                  ) : (
+                    <FaUserCircle />
+                  )}
+                  {user.name}
                   <button
                     className="top-bar-logout-btn"
                     onClick={() => setShowLogoutConfirm(true)}
@@ -160,10 +184,18 @@ function AppContent() {
                   </button>
                 </div>
                 {showLogoutConfirm && (
-                  <div className="logout-confirm-bar">
+                  <div
+                    className={`logout-confirm-bar${logoutClosing ? ' closing' : ''}`}
+                    onAnimationEnd={() => {
+                      if (logoutClosing) {
+                        setShowLogoutConfirm(false);
+                        setLogoutClosing(false);
+                      }
+                    }}
+                  >
                     <span>确定退出？</span>
                     <div className="logout-confirm-actions">
-                      <button className="logout-confirm-cancel" onClick={() => setShowLogoutConfirm(false)}>取消</button>
+                      <button className="logout-confirm-cancel" onClick={closeLogout}>取消</button>
                       <button className="logout-confirm-ok" onClick={() => {
                         logout();
                         localStorage.removeItem('daily-checkin-dates');

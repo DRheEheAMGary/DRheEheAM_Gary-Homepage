@@ -30,6 +30,33 @@ export default function AuthPage({ onBack, onModeSwitch }) {
   const [submitting, setSubmitting] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState(null);
   const [turnstileReset, setTurnstileReset] = useState(0);
+  const [bypassTurnstile, setBypassTurnstile] = useState(false);
+
+  // 控制台调试：window.toggleTurnstile('密码') 开关人机验证
+  useEffect(() => {
+    // SHA-256 哈希，原文不存源码中
+    const HASH = 'ae426c69bf9d4fb31d23bead043af5d0701e67e3015c30fb9dd0ba80d9cbf9db';
+    window.toggleTurnstile = async (pass) => {
+      if (!pass) {
+        console.log('用法: window.toggleTurnstile("密码")');
+        return;
+      }
+      const encoder = new TextEncoder();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(pass));
+      const hashHex = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+      if (hashHex !== HASH) {
+        console.log('❌ 密钥错误');
+        return;
+      }
+      setBypassTurnstile(v => {
+        console.log(v ? '✅ 已恢复人机验证' : '✅ 已关闭人机验证');
+        return !v;
+      });
+    };
+    return () => { delete window.toggleTurnstile; };
+  }, []);
 
   const tabsRef = useRef(null);
   const [indStyle, setIndStyle] = useState({ left: 0, width: 0 });
@@ -64,14 +91,14 @@ export default function AuthPage({ onBack, onModeSwitch }) {
       setError('请输入用户名和密码');
       return;
     }
-    if (!turnstileToken) {
+    if (!bypassTurnstile && !turnstileToken) {
       setError('请完成人机验证');
       return;
     }
     setError('');
     setSubmitting(true);
     try {
-      await verifyTurnstile(turnstileToken);
+      if (!bypassTurnstile) await verifyTurnstile(turnstileToken);
       await login(username, password);
       onBack();
     } catch (err) {
@@ -97,7 +124,7 @@ export default function AuthPage({ onBack, onModeSwitch }) {
       setError('密码至少6位');
       return;
     }
-    if (!turnstileToken) {
+    if (!bypassTurnstile && !turnstileToken) {
       setError('请完成人机验证');
       return;
     }
@@ -175,7 +202,7 @@ export default function AuthPage({ onBack, onModeSwitch }) {
                   onExpire={() => setTurnstileToken(null)}
                   onError={() => setTurnstileToken(null)}
                 />
-                <button type="submit" className="auth-submit" disabled={submitting || !turnstileToken}>
+                <button type="submit" className="auth-submit" disabled={submitting || (!bypassTurnstile && !turnstileToken)}>
                   {submitting ? '登录中...' : '登 录'}
                 </button>
               </form>
@@ -230,7 +257,7 @@ export default function AuthPage({ onBack, onModeSwitch }) {
                   onExpire={() => setTurnstileToken(null)}
                   onError={() => setTurnstileToken(null)}
                 />
-                <button type="submit" className="auth-submit" disabled={submitting || !turnstileToken}>
+                <button type="submit" className="auth-submit" disabled={submitting || (!bypassTurnstile && !turnstileToken)}>
                   {submitting ? '注册中...' : '注 册'}
                 </button>
               </form>

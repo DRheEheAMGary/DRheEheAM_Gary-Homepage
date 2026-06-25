@@ -1,16 +1,15 @@
 import { useRef, useCallback } from 'react';
 import { useTheme } from '../hooks/useTheme';
-import { FaSun, FaMoon } from 'react-icons/fa';
+import { FaSun, FaMoon, FaAdjust } from 'react-icons/fa';
 
 export default function ThemeToggle() {
-  const { isDark, toggleTheme } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
   const btnRef = useRef(null);
 
   const handleClick = useCallback(() => {
     const btn = btnRef.current;
     const root = document.documentElement;
 
-    // 记录按钮在视口中的中心位置，传递给 CSS
     if (btn) {
       const rect = btn.getBoundingClientRect();
       root.style.setProperty('--vt-x', `${rect.left + rect.width / 2}px`);
@@ -20,25 +19,32 @@ export default function ThemeToggle() {
       root.style.setProperty('--vt-y', '50%');
     }
 
-    // 使用 View Transition API：自动截取新旧页面快照，以圆形裁剪从按钮处揭开新主题
     if (document.startViewTransition) {
       document.startViewTransition(() => {
         toggleTheme();
       });
     } else {
-      // 降级：普通过渡
       toggleTheme();
     }
-  }, [isDark, toggleTheme]);
+  }, [toggleTheme]);
+
+  const modeLabel = theme === 'auto' ? '自动（跟随系统）' : isDark ? '深色模式' : '浅色模式';
+  const nextLabel = theme === 'auto' ? '浅色' : theme === 'light' ? '深色' : '自动';
+
+  const icon = theme === 'auto'
+    ? <FaAdjust />
+    : isDark
+      ? <FaMoon />
+      : <FaSun />;
 
   return (
     <button
       ref={btnRef}
       className="theme-toggle"
       onClick={handleClick}
-      title={isDark ? '切换到浅色模式' : '切换到深色模式'}
+      title={`${modeLabel} — 点击切换到${nextLabel}模式`}
     >
-      {isDark ? <FaSun /> : <FaMoon />}
+      {icon}
     </button>
   );
 }
