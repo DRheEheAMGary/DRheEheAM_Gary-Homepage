@@ -3,7 +3,7 @@ const profile = {
   name: "DRheEheAM_Gary",
   cn: "DRheEheAM_Gary",
   mbti: "ESFJ",
-  description: "初三(准高一)生 | OIer | 二次元",
+  description: "高一生 | OIer | 二次元",
   location: "JX-NC",
   quote: "爱如果太猛烈/注定是要毁灭",
   avatar: "https://r.dreamgary.cn/images/headround.jpg",
@@ -11,7 +11,7 @@ const profile = {
   // 关于
   about: [
     "欢迎来到我的主页(awa",
-    "我是一名初三(准高一)生，现居 JX-NC ，是一名 OIer & 二次元",
+    "我是一名高一生，现居 JX-NC ，是一名 OIer & 二次元",
     "很开心与你做朋友!",
   ],
 
@@ -47,8 +47,7 @@ const profile = {
   // 游戏账号
   gameAccounts: [
     { icon: "fa-gamepad", game: "原神", uid: "292261202", level: "Lv.58" },
-    { icon: "fa-gamepad", game: "星穹铁道", uid: "157154425", level: "Lv.69" },
-    { icon: "fa-gamepad", game: "绝区零", uid: "24034903", level: "Lv.12" },
+    { icon: "fa-gamepad", game: "星穹铁道", uid: "157154425", level: "Lv.70" },
     { icon: "fa-cube", game: "MC Java", uid: "DRheEheAM", level: "" },
     { icon: "fa-cube", game: "MC 基岩", uid: "DreamGary513", level: "" },
   ],
