@@ -132,8 +132,12 @@ export default function AuthPage({ onBack, onModeSwitch }) {
     setSuccess('');
     setSubmitting(true);
     try {
-      await wpRegister(regUser, regEmail, regPass, turnstileToken);
-      setSuccess('注册成功！请切换到登录页面进行登录');
+      const result = await wpRegister(regUser, regEmail, regPass, turnstileToken);
+      if (result.need_verify) {
+        setSuccess('注册成功！验证邮件已发送至 ' + regEmail + '，请查收并点击邮件中的链接完成验证');
+      } else {
+        setSuccess('注册成功！请切换到登录页面进行登录');
+      }
       setRegUser(''); setRegEmail(''); setRegPass(''); setRegPass2('');
       setTurnstileToken(null);
       setTurnstileReset((n) => n + 1);

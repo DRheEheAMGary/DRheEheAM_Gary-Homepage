@@ -79,34 +79,28 @@ async function wpFetch(path, options = {}) {
 
 // ==================== 认证 ====================
 
-/** 登录：用户名 + 密码 → JWT token */
+/** 登录：用户名 + 密码 → JWT token（走 checkin 接口，含邮箱验证检查） */
 export async function login(username, password) {
-  const data = await fetch(`${WP_BASE}/jwt-auth/v1/token`, {
+  const res = await fetch(`${WP_BASE}/checkin/v1/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
-  }).then((res) => {
-    if (!res.ok) {
-      throw new Error('用户名或密码错误');
-    }
-    return res.json();
   });
 
-  setToken(data.token);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: '登录失败' }));
+    throw new Error(err.message || '用户名或密码错误');
+  }
 
-  // 登录后拉取用户头像
-  let avatar = null;
-  try {
-    const userData = await wpFetch('/wp/v2/users/me');
-    avatar = userData.avatar_urls?.['96'] || null;
-  } catch { /* 忽略 */ }
+  const data = await res.json();
+  setToken(data.token);
 
   return {
     token: data.token,
-    email: data.user_email,
-    nicename: data.user_nicename,
-    displayName: data.user_display_name,
-    avatar,
+    email: data.user?.email,
+    nicename: data.user?.username,
+    displayName: data.user?.name,
+    avatar: data.user?.avatar,
   };
 }
 
